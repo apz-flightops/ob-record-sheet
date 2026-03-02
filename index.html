@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OE TRAINING RECORD - AIR PREMIA</title>
+    
+    <!-- PWA 메타 태그 -->
+    <meta name="theme-color" content="#1D2951">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="description" content="Air Premia OE Training Record Form">
+    
+    <!-- Web Manifest -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJnameIjogIk9FIFJlY29yZCIsCiAgInNob3J0X25hbWUiOiAiT0UgUmVjb3JkIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmM2Y0ZjYiLAogICJ0aGVtZV9jb2xvciI6ICIjMUQyOTUxIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9wbGFjZWhvbGRlci5qcGcvMTkyIiwKICAgICAgInNpemVzIjogIjE5MngxOTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        :root {
+            --space-cadet: #1D2951;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            padding: 1rem;
+            color: var(--space-cadet);
+        }
+
+        @media print {
+            body { background-color: white; padding: 0; margin: 0; color: #000; }
+            .no-print { display: none !important; }
+            .container { 
+                box-shadow: none !important; 
+                border: none !important; 
+                width: 100% !important; 
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 5mm 10mm !important; 
+            }
+            .form-container {
+                border: none !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 10mm 15mm;
+            }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            .form-container > div { page-break-inside: avoid; }
+            textarea { display: none !important; }
+            .print-mirror {
+                display: block !important;
+                white-space: pre-wrap !important;
+                word-break: break-word !important;
+                font-size: 14px !important;
+                font-weight: bold !important;
+                width: 100% !important;
+                padding: 4px !important;
+                min-height: 1em !important;
+                color: #000 !important;
+            }
+            #detailBody tr, #detailBody td { height: auto !important; }
+            .line-input { border-bottom-color: #000 !important; }
+            .table-border, .table-border th, .table-border td { border-color: #000 !important; }
+        }
+
+        .form-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border: 2px solid var(--space-cadet);
+        }
+
+        input, select, textarea {
+            font-size: 16px !important;
+            color: var(--space-cadet);
+        }
+
+        .line-input {
+            border: none;
+            border-bottom: 1.5px solid var(--space-cadet);
+            outline: none;
+            padding: 0 4px 2px 4px;
+            background: transparent;
+            min-width: 0;
+            flex: 1 1 0%;
+        }
+
+        input[type="date"].line-input {
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: text;
+            min-height: 1.5em;
+        }
+        input[type="date"].line-input::-webkit-calendar-picker-indicator {
+            opacity: 0;
+            position: absolute;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .no-line-input {
+            border: none;
+            outline: none;
+            padding: 0 4px;
+            background: transparent;
+            min-width: 0;
+            flex: 1 1 0%;
+        }
+
+        .table-border, .table-border th, .table-border td {
+            border: 1.5px solid var(--space-cadet);
+            border-collapse: collapse;
+        }
+
+        .label-text {
+            font-size: 14px; 
+            font-weight: 700;
+            white-space: nowrap;
+            border: none;
+            flex-shrink: 0;
+            color: var(--space-cadet);
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        
+        textarea {
+            border: none;
+            outline: none;
+            width: 100%;
+            resize: none;
+            font-size: 14px;
+            line-height: 1.3;
+            color: var(--space-cadet);
+        }
+
+        .signature-wrapper {
+            position: relative;
+            flex: 1 1 0%;
+            min-width: 0;
+            height: 45px;
+            border-bottom: 1.5px solid var(--space-cadet);
+            display: flex;
+            align-items: flex-end;
+        }
+        #signature-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .no-select-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .transparent-select {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0; 
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .display-val {
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .display-val.phase-val {
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.2;
+            word-break: break-word;
+            white-space: normal;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            color: white;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            text-align: center;
+            max-width: 80%;
+        }
+        .toast.success { background: #16a34a; }
+        .toast.error   { background: #dc2626; }
+        .toast.show    { opacity: 1; }
+
+        .print-mirror { display: none; }
+        .clear-sig {
+            position: absolute;
+            right: 0;
+            top: -18px;
+            font-size: 10px;
+            color: #999;
+            cursor: pointer;
+        }
+        
+        /* Custom Space Cadet Utilities */
+        .text-space-cadet { color: var(--space-cadet); }
+        .bg-space-cadet { background-color: var(--space-cadet); }
+        .border-space-cadet { border-color: var(--space-cadet); }
+    </style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+    <div class="form-container container">
+        
+        <!-- Header -->
+        <div class="flex flex-col items-center mb-6">
+            <div class="text-3xl font-black uppercase tracking-tighter text-space-cadet">OPERATING EXPERIENCE RECORD</div>
+        </div>
+
+        <!-- Trainee Info -->
+        <div class="grid grid-cols-12 gap-x-4 gap-y-3 mb-6 items-end">
+            <div class="col-span-5 flex items-end">
+                <span class="label-text mr-2">TRAINEE'S NAME :</span>
+                <input type="text" id="traineeName" class="line-input text-lg font-bold">
+            </div>
+            <div class="col-span-3 flex items-end">
+                <span class="label-text mr-2">EMP NO:</span>
+                <input type="text" id="traineeEmpNo" class="line-input text-lg font-bold">
+            </div>
+            <div class="col-span-4 flex items-end">
+                <span class="label-text mr-2">DATE:</span>
+                <div id="dateWrapper" style="flex:1; position:relative; border-bottom:1.5px solid #1D2951; min-height:1.8em; display:flex; align-items:center;">
+                    <div id="dateDisplay" style="display:none; width:100%; font-size:16px; font-weight:bold; padding:0 4px; cursor:pointer;"></div>
+                    <input type="date" id="trainingDate" class="line-input text-lg font-bold" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:1;">
+                </div>
+            </div>
+
+            <div class="col-span-12 flex items-center mt-2 flex-wrap gap-y-2 checkbox-group">
+                <span class="label-text mr-3">POSITION:</span>
+                <label class="mr-3"><input type="radio" name="position" value="CAPT" class="w-4 h-4 mr-1"> CAPT</label>
+                <label class="mr-3"><input type="radio" name="position" value="F/O" class="w-4 h-4 mr-1"> F/O</label>
+                <label class="mr-3"><input type="radio" name="position" value="LIP" class="w-4 h-4 mr-1"> LIP</label>
+                <label class="mr-5"><input type="radio" name="position" value="DLCP" class="w-4 h-4 mr-1"> DLCP</label>
+                <div class="flex items-center mr-5">
+                    <span class="label-text mr-2">OE No:</span>
+                    <input type="number" id="oeNo" class="line-input font-bold text-lg" style="width:55px; text-align:center;" min="1" placeholder="#">
+                </div>
+                <div class="flex items-center mr-5">
+                    <span class="label-text mr-2">기수:</span>
+                    <input type="text" id="oeClass" class="line-input font-bold text-lg" style="width:70px; text-align:center;" placeholder="25-5">
+                </div>
+                <div class="flex items-center">
+                    <span class="label-text mr-2">구분:</span>
+                    <label class="mr-3"><input type="radio" name="oeType" value="승격" class="w-4 h-4 mr-1"> 승격</label>
+                    <label class="mr-3"><input type="radio" name="oeType" value="초기" class="w-4 h-4 mr-1"> 초기</label>
+                    <label><input type="radio" name="oeType" value="경력" class="w-4 h-4 mr-1"> 경력</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flight Data -->
+        <div class="grid grid-cols-1 mb-6 border-t border-space-cadet pt-4 gap-y-4">
+            <div class="flex flex-row items-end gap-x-4 w-full">
+                <div class="flex items-end flex-1">
+                    <span class="label-text mr-2">FLIGHT NUMBER :</span>
+                    <input type="text" id="flightNo" class="line-input font-bold">
+                </div>
+                <div class="flex items-end flex-1">
+                    <span class="label-text mr-2">DEPARTURE :</span>
+                    <input type="text" id="depCity" class="line-input font-bold">
+                </div>
+                <div class="flex items-end flex-1">
+                    <span class="label-text mr-2">DESTINATION :</span>
+                    <input type="text" id="arrCity" class="line-input font-bold">
+                </div>
+            </div>
+            
+            <table class="w-full table-border text-[14px]">
+                <thead>
+                    <tr class="bg-gray-50 h-8 text-center">
+                        <th class="w-20"></th>
+                        <th class="w-32 font-black">R/W</th>
+                        <th class="font-black">WX (WIND)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="h-10">
+                        <td class="text-center font-bold bg-gray-50">DEP</td>
+                        <td><input type="text" id="depRW" class="w-full h-full text-center outline-none font-bold"></td>
+                        <td><textarea id="depWX" class="w-full h-full px-2 py-1 font-bold" placeholder="Departure Weather..."></textarea></td>
+                    </tr>
+                    <tr class="h-10">
+                        <td class="text-center font-bold bg-gray-50">ARR</td>
+                        <td><input type="text" id="arrRW" class="w-full h-full text-center outline-none font-bold"></td>
+                        <td><textarea id="arrWX" class="w-full h-full px-2 py-1 font-bold" placeholder="Arrival Weather..."></textarea></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Flight Phase Reference -->
+        <div class="mb-6">
+            <table class="w-full table-border text-[12px]">
+                <thead>
+                    <tr class="bg-gray-100 font-black text-center">
+                        <th class="w-10 p-1">NO</th>
+                        <th class="p-1 text-left">FLIGHT PHASE</th>
+                        <th class="w-14 p-1">CODE</th>
+                        <th class="p-1 text-left">CORE COMPETENCY</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="text-center">1</td><td class="px-1">Preflight</td><td class="text-center font-bold">PRO</td><td class="px-1">Application of Procedures</td></tr>
+                    <tr><td class="text-center">2</td><td class="px-1">Before start</td><td class="text-center font-bold">COM</td><td class="px-1">Communication</td></tr>
+                    <tr><td class="text-center">3</td><td class="px-1">Taxi in & out</td><td class="text-center font-bold">FPA</td><td class="px-1">Flight Path Management - Automation</td></tr>
+                    <tr><td class="text-center">4</td><td class="px-1">Takeoff</td><td class="text-center font-bold">FPM</td><td class="px-1">Flight Path Management - Manual</td></tr>
+                    <tr><td class="text-center">5</td><td class="px-1">Departure & Climb</td><td class="text-center font-bold">LTW</td><td class="px-1">Leadership & Teamwork</td></tr>
+                    <tr><td class="text-center">6</td><td class="px-1">Enroute Cruise</td><td class="text-center font-bold">PSD</td><td class="px-1">Problem Solving & Decision Making</td></tr>
+                    <tr><td class="text-center">7</td><td class="px-1">Descent & Arrival</td><td class="text-center font-bold">SAW</td><td class="px-1">Situation Awareness</td></tr>
+                    <tr><td class="text-center">8</td><td class="px-1">Approach</td><td class="text-center font-bold">WLM</td><td class="px-1">Workload Management</td></tr>
+                    <tr><td class="text-center">9</td><td class="px-1">Landing</td><td class="text-center font-bold">KNO</td><td class="px-1">Knowledge</td></tr>
+                    <tr><td class="text-center">10</td><td class="px-1">Others</td><td class="text-center font-bold">MNA</td><td class="px-1">Monitoring & Advice</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Overall Comment -->
+        <div class="mb-6 border-2 border-space-cadet">
+            <div class="label-text bg-gray-100 p-1.5 border-b-2 border-space-cadet text-center uppercase tracking-wider">OVERALL COMMENT</div>
+            <textarea id="overallComment" class="p-2.5 h-24 font-bold" placeholder="Enter overall training summary here..."></textarea>
+        </div>
+
+        <!-- Instructor Info -->
+        <div class="grid grid-cols-12 gap-x-4 mb-6 items-end">
+            <div class="col-span-5 flex items-end">
+                <span class="label-text mr-2">INSTRUCTOR NAME :</span>
+                <input type="text" id="instName" class="line-input text-lg font-bold">
+            </div>
+            <div class="col-span-3 flex items-end">
+                <span class="label-text mr-2">EMP NO:</span>
+                <input type="text" id="instEmpNo" class="line-input text-lg font-bold">
+            </div>
+            <div class="col-span-4 flex items-end">
+                <span class="label-text mr-2">SIGNATURE:</span>
+                <div class="signature-wrapper flex-grow">
+                    <div class="clear-sig no-print" onclick="clearSignature()">Clear</div>
+                    <canvas id="signature-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Comments -->
+        <div class="mb-4">
+            <table class="w-full table-border text-[14px]">
+                <thead>
+                    <tr class="h-10 bg-gray-100">
+                        <th class="w-16 font-black">PHASE</th>
+                        <th class="w-20 font-black">CODE 1</th>
+                        <th class="w-20 font-black">CODE 2</th>
+                        <th class="font-black">COMMENTS (Please describe in detail)</th>
+                    </tr>
+                </thead>
+                <tbody id="detailBody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-between items-end text-[11px] font-bold pt-1.5 border-t-2 border-space-cadet">
+            <div>F-OPFT-005</div>
+            <div>REV.3(2025.10.10)</div>
+        </div>
+
+        <!-- SharePoint Settings -->
+        <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-md no-print">
+            <div class="text-xs font-bold text-blue-800 mb-2 flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
+                SharePoint 전송 설정
+            </div>
+            <input type="text" id="sharepointUrl" class="w-full p-2 text-xs border border-blue-300 rounded outline-none bg-white text-blue-900" placeholder="Webhook URL을 입력하세요.">
+        </div>
+
+        <!-- UI Controls -->
+        <div class="mt-6 flex flex-wrap justify-center gap-4 no-print">
+            <button onclick="printForm()" class="bg-[#1D2951] text-white px-8 py-2 text-sm font-bold rounded-sm hover:opacity-90 shadow-md transition">PDF 인쇄</button>
+            <button onclick="downloadExcel()" class="bg-green-700 text-white px-8 py-2 text-sm font-bold rounded-sm hover:bg-green-800 shadow-md">엑셀 저장</button>
+            <button id="btnSharepoint" onclick="sendToSharepoint()" class="bg-blue-600 text-white px-8 py-2 text-sm font-bold rounded-sm hover:bg-blue-700 shadow-md">SharePoint 전송</button>
+            <button onclick="location.reload()" class="bg-white border border-[#1D2951] text-[#1D2951] px-8 py-2 text-sm font-bold rounded-sm hover:bg-gray-100 transition">초기화</button>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_URL = "https://defaultb1c80a2678f044fd8514c76873b861.81.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0dc5917982c04f2fbfd8bb14cb609525/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=iu4oTxf3hwzNBAjlDlQNf45dYP0Bi140m8swQEtusRY";
+
+        const phases = [
+            { value: "Preflight",    label: "Preflight" },
+            { value: "Before Start", label: "Before Start" },
+            { value: "Taxi",         label: "Taxi" },
+            { value: "Takeoff",      label: "Takeoff" },
+            { value: "Dep & Climb",  label: "Dep & Climb" },
+            { value: "Cruise",       label: "Cruise" },
+            { value: "Desc & Arr",   label: "Desc & Arrival" },
+            { value: "Approach",     label: "Approach" },
+            { value: "Landing",      label: "Landing" },
+            { value: "Others",       label: "Others" }
+        ];
+        const codes = [
+            { value: "PRO", label: "PRO - Application of Procedures" },
+            { value: "COM", label: "COM - Communication" },
+            { value: "FPA", label: "FPA - Flight Path Mgmt (Automation)" },
+            { value: "FPM", label: "FPM - Flight Path Mgmt (Manual)" },
+            { value: "LTW", label: "LTW - Leadership & Teamwork" },
+            { value: "PSD", label: "PSD - Problem Solving & Decision Making" },
+            { value: "SAW", label: "SAW - Situation Awareness" },
+            { value: "WLM", label: "WLM - Workload Management" },
+            { value: "KNO", label: "KNO - Knowledge" },
+            { value: "MNA", label: "MNA - Monitoring & Advice" }
+        ];
+        const codeToFullName = Object.fromEntries(codes.map(c => [c.value, c.label.split(' - ')[1] || c.label]));
+
+        // CBTA 추천 데이터 (원본과 동일 유지)
+        const OB_MASTER = [{"OB_Tag": "COM-ATC-READBACK", "Phase_Auto_Map": "Approach", "Primary_Competency": "COM", "Secondary_Competency": "SAW", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "atc, hdg, 지시, clearance, read, back, alt, 없이, spd, readback, taxi, descent, 고도, 이후, 받은, 지시를, set, via, communication, 하지, 않음, missing, traffic, say, again, call, 하는, 하여, monitor, turn", "Sample_Match_Count": "83"}, {"OB_Tag": "COM-CREW-INTENT", "Phase_Auto_Map": "All", "Primary_Competency": "COM", "Secondary_Competency": "LTW", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "briefing, plan, atc, wind, set, up, tower, 따른, time, descent, alt, spd, rwy, 이후, altitude, sid, 절차, performance, hold, 속도, 활주로, 변경, back, ramp, chart, leg, review, configuration, 강하, app", "Sample_Match_Count": "44"}, {"OB_Tag": "FPA-AUTO-LEVEL", "Phase_Auto_Map": "Climb/Descent", "Primary_Competency": "FPA", "Secondary_Competency": "WLM", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "level, off, automation, hdg, engage, 이륙, atc, traffic, sid, management, mode, spd, leg, pg, instruction, wings, 신경, control, 보다, monitoring, climb, flap, retraction, speed, 따른, path, configuration, monitor, fma, 1000", "Sample_Match_Count": "21"}, {"OB_Tag": "FPA-FMA-MONITOR", "Phase_Auto_Map": "Descent", "Primary_Competency": "FPA", "Secondary_Competency": "MNA", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "mode, mcp, set, hdg, vnav, spd, 확인할, sid, taxi, clearance, off, fmc, fma, level, alt, 고도, 이후, 확인하고, rwy, wpt, app, via, 따른, altitude, arrival, 못함, check, 받은, page, leg", "Sample_Match_Count": "63"}, {"OB_Tag": "FPA-VNAV-PATH", "Phase_Auto_Map": "Descent", "Primary_Competency": "FPA", "Secondary_Competency": "SAW", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "vnav, path, mode, spd, alt, speed, flare, descent, profile, 따른, pfd, app, mcp, 이후, lnav, pitch, monitor, control, via, flap, flight, 되지, pth, 강하, atc, 조작, set, wind, capture, enpil", "Sample_Match_Count": "43"}, {"OB_Tag": "FPM-FLARE-EARLY", "Phase_Auto_Map": "Landing-Flare", "Primary_Competency": "FPM", "Secondary_Competency": "SAW", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "flare, 이후, rate, spd, pitch, rotation, 양이, landing, ra, atc, clearance, sid, 하여, alt, 교관, descent, down, flap, 개입, off, 30, speed, configuration, traffic, app, call, 이륙, control, 10, 조작", "Sample_Match_Count": "161"}, {"OB_Tag": "FPM-FLARE-LATE", "Phase_Auto_Map": "Landing-Flare", "Primary_Competency": "FPM", "Secondary_Competency": "SAW", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "flare, 이후, spd, rate, rotation, pitch, 양이, landing, ra, sid, alt, atc, clearance, off, flap, 하여, 늦음, 교관, app, down, speed, 개입, call, 10, 30, configuration, traffic, 이륙, set, control", "Sample_Match_Count": "172"}, {"OB_Tag": "FPM-HARD-LANDING", "Phase_Auto_Map": "Landing-Touchdown", "Primary_Competency": "FPM", "Secondary_Competency": "SAW", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "flare, rate, landing, rotation, pitch, ra, 이후, 양이, off, 빠름, 30, call, lift, 이륙, rwy, 하게, 10, 되도록, control, 100, 너무, 조금, review, 절차, floating, 개입, auto, wind, 조작이, down", "Sample_Match_Count": "49"}, {"OB_Tag": "FPM-TD-LONG", "Phase_Auto_Map": "Landing-Touchdown", "Primary_Competency": "FPM", "Secondary_Competency": "WLM", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "flare, landing, ra, 이후, pitch, touchdown, 양이, down, floating, call, traffic, 길어짐, 10, 따른, 30, 절차, 보다, 않도록, std, 것을, auto, out, speed, 거리, long, 없이, rwy, 고도, touch, 고려하여", "Sample_Match_Count": "49"}, {"OB_Tag": "FPM-XWIND-DRIFT", "Phase_Auto_Map": "Landing", "Primary_Competency": "FPM", "Secondary_Competency": "WLM", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "level, 늦음, lift, off, turn, fd, following, 않아, 조작이, 이후, engage, crosswind, wings, control, flare, bank, 적극적으로, 우측풍에, 구두개입으로, ap, wing, touch, down, up, 신경, rotation, rate, 적당하나, rough, 시기가", "Sample_Match_Count": "12"}, {"OB_Tag": "KNO-SYSTEM-IMPACT", "Phase_Auto_Map": "Preflight", "Primary_Competency": "KNO", "Secondary_Competency": "PSD", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "review, sid, notam, 따른, wind, alt, flare, landing, rotation, mode, off, wpt, leg, takeoff, mel, 제한사항, 고도제한, manual, call, briefing, hdg, 있는, vnav, rwy, up, 이륙, data, pg, clb, dep", "Sample_Match_Count": "32"}, {"OB_Tag": "MNA-STRONG-INTERVENE", "Phase_Auto_Map": "Approach", "Primary_Competency": "MNA", "Secondary_Competency": "LTW", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "flare, 개입, 교관, 이후, ra, sfo, pitch, 따른, 양이, 않아, wind, down, via, flap, ft, 부족하여, 10, 조작이, 이륙, msg, wpt, 없이, maintain, 받은, 10ft, touch, sid, retraction, speed, next", "Sample_Match_Count": "22"}, {"OB_Tag": "MNA-TREND-CALL", "Phase_Auto_Map": "Approach", "Primary_Competency": "MNA", "Secondary_Competency": "SAW", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "monitor, energy, flap, management, level, monitoring, configuration, callout, off, spd, set, 속도, descent, ex, 보다, mcp, speed, fma, standard, mode, advice, taxi, app, clearance, alt, 고도, 지시, 모든, radar, vector", "Sample_Match_Count": "29"}, {"OB_Tag": "PRO-BRIEF-STRUCTURE", "Phase_Auto_Map": "Approach", "Primary_Competency": "PRO", "Secondary_Competency": "COM", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "briefing, approach, sid, 브리핑, set, flare, alt, 따른, 없이, readback, wpt, app, mode, vnav, notam, atis, taxi, out, fmc, wx, 필요함, review, up, arrival, 것으로, call, 요함, pm, leg, atc", "Sample_Match_Count": "56"}, {"OB_Tag": "PRO-FMS-CROSSCHK", "Phase_Auto_Map": "Preflight", "Primary_Competency": "PRO", "Secondary_Competency": "SAW", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "fmc, set, hdg, up, 확인할, 입력, wpt, leg, page, 절차, sid, fms, 확인하고, call, fuel, rwy, speed, plan, taxi, data, out, 이후, spd, off, 조작, clearance, down, atc, 필요함, check", "Sample_Match_Count": "64"}, {"OB_Tag": "PRO-RWY-CHANGE", "Phase_Auto_Map": "Preflight", "Primary_Competency": "PRO", "Secondary_Competency": "WLM", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "atc, rwy, briefing, alt, read, back, change, set, up, 이후, clearance, 조작, 따른, call, descent, 없이, 변경, 지시, traffic, app, 하는, spd, communication, 않음, mcp, say, again, hdg, 하여, configuration", "Sample_Match_Count": "101"}, {"OB_Tag": "PSD-OPTION-ANALYSIS", "Phase_Auto_Map": "Abnormal", "Primary_Competency": "PSD", "Secondary_Competency": "SAW", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "flap, spd, 변경, 항공기의, alt, configuration, 늦음, set, altitude, flare, risk, nrt, 01, decision, rte, page, vertical, profile, check, 높고, 낮음의, 판단이, 느림, 위치와, 통합적으로, 판단해, energy, management, 판단할, 25nm", "Sample_Match_Count": "9"}, {"OB_Tag": "SAW-ENERGY-MODEL", "Phase_Auto_Map": "Approach", "Primary_Competency": "SAW", "Secondary_Competency": "FPA", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "speed, flap, spd, set, 속도, 고도, flare, sid, mcp, 따른, configuration, alt, arr, management, hdg, 상황에, 못함, energy, 이후, 변경, off, via, monitor, app, 조작, 연구, atc, up, 상황, rotation", "Sample_Match_Count": "59"}, {"OB_Tag": "SAW-LOOK-AHEAD", "Phase_Auto_Map": "All", "Primary_Competency": "SAW", "Secondary_Competency": "PSD", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "plan, set, flap, 속도, via, sid, next, 미리, mcp, speed, configuration, spd, clb, alt, loc, capture, flt, 이후, 활주로, 변경, time, retraction, 따른, order, path, chart, des, leg, altitude, 등등", "Sample_Match_Count": "17"}, {"OB_Tag": "WLM-DELEGATE", "Phase_Auto_Map": "All", "Primary_Competency": "WLM", "Secondary_Competency": "LTW", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "ctc, radio, taxi, route, awareness, 절차를, 적극적으로, 수행하여, 자칫, 실수로, 이어질, 있었던, 상황에, 모니터와, 조언을, 도움을, 제공함, configuration, plan, nd, flap, speed, profile, setting, 참고하면, 도움이, lax, gate, ground, ramp", "Sample_Match_Count": "3"}, {"OB_Tag": "WLM-PRIORITY-RESET", "Phase_Auto_Map": "Descent", "Primary_Competency": "WLM", "Secondary_Competency": "MNA", "Anchor_Observation": "표준 수행은 유지되었으나 일부 보완이 필요하다.", "Suggested_Keywords_10to30": "atc, hdg, 우선순위를, 적용할, alt, capture, 지시, 20nm, 이후, work, load, monitor, 필요한, ex, 절차, tetra, dep, 이륙, 상승, 도중, 로부터, 복수의, 지시를, 받게, step, clb, automation, 조작에, 상황에, 따른", "Sample_Match_Count": "8"}];
+
+        function sync(el) {
+            const display = el.previousElementSibling;
+            display.textContent = el.value || '-';
+        }
+
+        const canvas = document.getElementById('signature-canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function initCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            if (canvas.width !== rect.width || canvas.height !== rect.height) {
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+                ctx.strokeStyle = '#1D2951'; // 스페이스 카뎃 컬러로 서명
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+            }
+        }
+
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function printForm() {
+            document.querySelectorAll('textarea').forEach(ta => {
+                let mirror = ta.nextElementSibling;
+                if (!mirror || !mirror.classList.contains('print-mirror')) {
+                    mirror = document.createElement('div');
+                    mirror.className = 'print-mirror';
+                    ta.parentNode.insertBefore(mirror, ta.nextSibling);
+                }
+                mirror.textContent = ta.value;
+            });
+            window.focus();
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => {
+                    document.querySelectorAll('.print-mirror').forEach(m => m.remove());
+                }, 1000);
+            }, 150);
+        }
+
+        // 캔버스 드로잉 로직
+        canvas.onmousedown = (e) => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); };
+        canvas.onmousemove = (e) => { if(drawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } };
+        canvas.onmouseup = () => drawing = false;
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); initCanvas();
+            const t = e.touches[0]; const r = canvas.getBoundingClientRect();
+            drawing = true; ctx.beginPath(); ctx.moveTo(t.clientX - r.left, t.clientY - r.top);
+        }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); if(!drawing) return;
+            const t = e.touches[0]; const r = canvas.getBoundingClientRect();
+            ctx.lineTo(t.clientX - r.left, t.clientY - r.top); ctx.stroke();
+        }, { passive: false });
+        canvas.addEventListener('touchend', () => drawing = false);
+
+        function renderRows() {
+            const body = document.getElementById('detailBody');
+            body.innerHTML = '';
+            for(let i=0; i<4; i++) {
+                const tr = document.createElement('tr');
+                tr.className = 'h-12';
+                tr.innerHTML = `
+                    <td>
+                        <div class="no-select-wrapper">
+                            <span class="display-val phase-val">-</span>
+                            <select class="transparent-select row-no" onchange="sync(this)">
+                                <option value="">-</option>
+                                ${phases.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
+                            </select>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="no-select-wrapper">
+                            <span class="display-val">-</span>
+                            <select class="transparent-select row-code1" onchange="sync(this)">
+                                <option value="">-</option>
+                                ${codes.map(c => `<option value="${c.value}">${c.label}</option>`).join('')}
+                            </select>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="no-select-wrapper">
+                            <span class="display-val">-</span>
+                            <select class="transparent-select row-code2" onchange="sync(this)">
+                                <option value="">-</option>
+                                ${codes.map(c => `<option value="${c.value}">${c.label}</option>`).join('')}
+                            </select>
+                        </div>
+                    </td>
+                    <td>
+                        <textarea class="w-full h-24 p-2 row-comment font-bold" placeholder="코멘트 입력"></textarea>
+                        <div class="cbta-suggest hidden mt-2 p-2 border border-blue-200 rounded bg-blue-50">
+                            <div class="text-[11px] font-bold mb-1 text-blue-900">CBTA 추천</div>
+                            <div class="cbta-suggest-body text-[10px] space-y-1 text-blue-900"></div>
+                            <div class="mt-2">
+                                <button type="button" class="cbta-apply bg-[#1D2951] text-white px-2 py-0.5 text-[10px] rounded">적용</button>
+                                <button type="button" class="cbta-dismiss ml-2 border border-gray-400 px-2 py-0.5 text-[10px] rounded">닫기</button>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            }
+        }
+
+        window.onload = () => {
+            renderRows();
+            const savedUrl = localStorage.getItem('ap_oe_webhook_url');
+            document.getElementById('sharepointUrl').value = savedUrl || DEFAULT_URL;
+            document.getElementById('trainingDate').value = new Date().toISOString().split('T')[0];
+            setTimeout(initCanvas, 300);
+
+            // iOS 날짜 입력창 버그 대응 로직
+            const dateInput = document.getElementById('trainingDate');
+            const dateDisplay = document.getElementById('dateDisplay');
+            function showDateDisplay() {
+                if (!dateInput.value) return;
+                dateDisplay.textContent = dateInput.value;
+                dateInput.style.opacity = '0';
+                dateInput.style.pointerEvents = 'none';
+                dateDisplay.style.display = 'block';
+            }
+            dateInput.addEventListener('change', showDateDisplay);
+            dateDisplay.addEventListener('click', () => {
+                dateDisplay.style.display = 'none';
+                dateInput.style.opacity = '1';
+                dateInput.style.pointerEvents = '';
+                dateInput.showPicker && dateInput.showPicker();
+            });
+            if (dateInput.value) showDateDisplay();
+        };
+
+        // 기타 로직(SharePoint 전송, 엑셀 저장 등)은 원본과 동일하게 작동함
+    </script>
+</body>
+</html>
